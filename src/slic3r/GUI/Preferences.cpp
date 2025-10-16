@@ -561,6 +561,12 @@ wxBoxSizer *PreferencesDialog::create_item_text_input(wxString title, wxString t
         auto value = input->GetTextCtrl()->GetValue();
         app_config->set(section, param, std::string(value.mb_str()));
         onchange(value);
+        e.Skip();
+    });
+
+    return sizer_input;
+}
+
 wxBoxSizer *PreferencesDialog::create_camera_orbit_mult_input(wxString title, wxWindow *parent, wxString tooltip)
 {
     wxBoxSizer *sizer_input = new wxBoxSizer(wxHORIZONTAL);
