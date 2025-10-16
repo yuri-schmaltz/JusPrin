@@ -27,8 +27,9 @@ JusPrinChatPanel::JusPrinChatPanel(wxWindow* parent) : wxPanel(parent, wxID_ANY,
 
     wxBoxSizer* topsizer = new wxBoxSizer(wxVERTICAL);
 
-    // Create the webview
-    m_browser = WebView::CreateWebView(this, "");
+    // Create the webview with URL
+    wxString url = wxString::Format("file://%s/web/jusprin/jusprin_chat_preload.html", from_u8(resources_dir()));
+    m_browser = WebView::CreateWebView(this, url);
     if (m_browser == nullptr) {
         wxLogError("Could not init m_browser");
         return;
@@ -47,8 +48,6 @@ JusPrinChatPanel::JusPrinChatPanel(wxWindow* parent) : wxPanel(parent, wxID_ANY,
 
     // Connect the idle events
     Bind(wxEVT_CLOSE_WINDOW, &JusPrinChatPanel::OnClose, this);
-
-    load_url();
 }
 
 
@@ -352,17 +351,6 @@ void JusPrinChatPanel::handle_set_btn_notification_badges(const nlohmann::json& 
             view3d->setChatPanelNotificationBadges(red_badge, orange_badge, green_badge);
         }
     });
-}
-
-void JusPrinChatPanel::load_url()
-{
-    BOOST_LOG_TRIVIAL(debug) << __FUNCTION__ << " load_url() called";
-
-    m_chat_page_loaded = false;
-    wxString url = wxString::Format("file://%s/web/jusprin/jusprin_chat_preload.html", from_u8(resources_dir()));
-    if (m_browser == nullptr)
-        return;
-    m_browser->LoadURL(url);
 }
 
 void JusPrinChatPanel::UpdateOAuthAccessToken() {

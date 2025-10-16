@@ -48,7 +48,6 @@ public:
     virtual void Raise() override;
 
 private:
-    void load_url();
     void update_mode();
     void OnClose(wxCloseEvent& evt);
     void OnError(wxWebViewEvent& evt);
