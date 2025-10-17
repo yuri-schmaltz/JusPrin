@@ -33,8 +33,8 @@ JusPrinLoginDialog::JusPrinLoginDialog()
     }
     m_networkOk = false;
 
-    // Create the webview
-    m_browser = WebView::CreateWebView(this, "");
+    // Create the webview with URL
+    m_browser = WebView::CreateWebView(this, auth_url);
     if (m_browser == nullptr) {
         wxLogError("Could not create JusPrin login webview");
         return;
@@ -63,7 +63,6 @@ JusPrinLoginDialog::JusPrinLoginDialog()
     wxPoint tmpPT((screenwidth - pSize.x) / 2, MaxY);
     Move(tmpPT);
 
-    m_browser->LoadURL(auth_url);
    //wxGetApp().UpdateDlgDarkUI(this);
 }
 
@@ -187,7 +186,7 @@ void JusPrinLoginDialog::RunScript(const wxString& javascript)
 
 bool JusPrinLoginDialog::ShowErrorPage()
 {
-    wxString ErrorUrl = from_u8((boost::filesystem::path(resources_dir()) / "web/login/error.html").make_preferred().string());
+    wxString ErrorUrl = wxString::Format("file://%s/web/login/error.html", from_u8(resources_dir()));
     load_url(ErrorUrl);
     return true;
 }

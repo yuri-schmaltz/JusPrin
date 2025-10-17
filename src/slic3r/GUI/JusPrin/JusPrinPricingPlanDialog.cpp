@@ -13,7 +13,11 @@ JusPrinPricingPlanDialog::JusPrinPricingPlanDialog()
 {
     SetBackgroundColour(*wxWHITE);
 
-    m_browser = WebView::CreateWebView(this, "");
+    // Construct the pricing URL using the base URL utility
+    wxString pricing_url = JusPrinUtils::GetJusPrinBaseUrl() + "/ent/jusprin/pricing/";
+
+    // Create the webview with URL
+    m_browser = WebView::CreateWebView(this, pricing_url);
     if (m_browser == nullptr) {
         wxLogError("Could not create JusPrin pricing plan webview");
         return;
@@ -42,22 +46,12 @@ JusPrinPricingPlanDialog::JusPrinPricingPlanDialog()
     // Enable dev tools if developer mode is enabled
     m_browser->EnableAccessToDevTools(wxGetApp().app_config->get_bool("developer_mode"));
 
-    // Construct the pricing URL using the base URL utility
-    wxString pricing_url = JusPrinUtils::GetJusPrinBaseUrl() + "/ent/jusprin/pricing/";
-    m_browser->LoadURL(pricing_url);
     wxGetApp().UpdateDlgDarkUI(this);
 }
 
 bool JusPrinPricingPlanDialog::run()
 {
     return (ShowModal() == wxID_OK);
-}
-
-void JusPrinPricingPlanDialog::load_url(wxString& url)
-{
-    m_browser->LoadURL(url);
-    m_browser->SetFocus();
-    UpdateState();
 }
 
 void JusPrinPricingPlanDialog::UpdateState()

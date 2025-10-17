@@ -22,7 +22,6 @@ private:
     void OnTitleChanged(wxWebViewEvent& evt);
     void OnFullScreenChanged(wxWebViewEvent& evt);
 
-    void load_url(wxString& url);
     void UpdateState();
 };
 
