@@ -362,7 +362,7 @@ bool PresetBundle::use_bbl_device_tab() {
     }
 
     const auto cfg = printers.get_edited_preset().config;
-    // Use bbl device tab if printhost webui url is not set 
+    // Use bbl device tab if printhost webui url is not set
     return cfg.opt_string("print_host_webui").empty();
 }
 
@@ -1617,7 +1617,7 @@ void PresetBundle::update_selections(AppConfig &config)
     if (!f_colors.empty()) {
         boost::algorithm::split(filament_colors, f_colors, boost::algorithm::is_any_of(","));
     }
-    filament_colors.resize(filament_presets.size(), "#26A69A");
+    filament_colors.resize(filament_presets.size(), "#7D5C93");
     project_config.option<ConfigOptionStrings>("filament_colour")->values = filament_colors;
     std::vector<std::string> matrix;
     if (config.has_printer_setting(initial_printer_profile_name, "flush_volumes_matrix")) {
@@ -1724,7 +1724,7 @@ void PresetBundle::load_selections(AppConfig &config, const PresetPreferences& p
     if (!f_colors.empty()) {
         boost::algorithm::split(filament_colors, f_colors, boost::algorithm::is_any_of(","));
     }
-    filament_colors.resize(filament_presets.size(), "#26A69A");
+    filament_colors.resize(filament_presets.size(), "#7D5C93");
     project_config.option<ConfigOptionStrings>("filament_colour")->values = filament_colors;
     std::vector<std::string> matrix;
     if (config.has_printer_setting(initial_printer_profile_name, "flush_volumes_matrix")) {
@@ -2095,10 +2095,10 @@ DynamicPrintConfig PresetBundle::full_config_secure() const
     config.erase("print_host");
     config.erase("print_host_webui");
     config.erase("printhost_apikey");
-    config.erase("printhost_cafile");    
-    config.erase("printhost_user");    
-    config.erase("printhost_password");    
-    config.erase("printhost_port");    
+    config.erase("printhost_cafile");
+    config.erase("printhost_user");
+    config.erase("printhost_password");
+    config.erase("printhost_port");
     return config;
 }
 
@@ -2160,7 +2160,7 @@ DynamicPrintConfig          PresetBundle::filaments_config() const
             const Preset*             preset = filament_presets[index];
             // The compatible_prints/printers_condition() returns a reference to configuration key, which may not yet exist.
             DynamicPrintConfig& cfg_rw = *const_cast<DynamicPrintConfig*>(cfg);
-        
+
             // BBS: add logic for settings check between different system presets
             std::string filament_inherits = Preset::inherits(cfg_rw);
             filament_ids.emplace_back(preset->filament_id);
@@ -2518,7 +2518,7 @@ ConfigSubstitutions PresetBundle::load_config_file(const std::string &path, Forw
     //BBS: add config related logs
     BOOST_LOG_TRIVIAL(debug) << __FUNCTION__ << boost::format(" can not load config file %1% not from gcode")%path ;
     throw Slic3r::RuntimeError(std::string("Unknown configuration file: ") + path);
-    
+
     return ConfigSubstitutions{};
 }
 
