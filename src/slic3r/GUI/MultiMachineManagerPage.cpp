@@ -281,8 +281,8 @@ MultiMachineManagerPage::MultiMachineManagerPage(wxWindow* parent)
 
     //edit prints
     auto m_btn_bg_enable = StateColor(
-        std::pair<wxColour, int>(wxColour(0, 137, 123), StateColor::Pressed),
-        std::pair<wxColour, int>(wxColour(38, 166, 154), StateColor::Hovered),
+        std::pair<wxColour, int>(wxColour(90, 64, 106), StateColor::Pressed),
+        std::pair<wxColour, int>(wxColour(125, 92, 147), StateColor::Hovered),
         std::pair<wxColour, int>(wxColour(105, 75, 124), StateColor::Normal)
     );
 

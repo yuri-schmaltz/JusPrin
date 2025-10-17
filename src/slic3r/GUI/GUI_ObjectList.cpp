@@ -58,7 +58,7 @@ static const Selection& scene_selection()
     //BBS AssembleView canvas has its own selection
     if (wxGetApp().plater()->get_current_canvas3D()->get_canvas_type() == GLCanvas3D::ECanvasType::CanvasAssembleView)
         return wxGetApp().plater()->get_assmeble_canvas3D()->get_selection();
-    
+
     return wxGetApp().plater()->get_view3D_canvas3D()->get_selection();
 }
 
@@ -92,7 +92,7 @@ public:
     }
     virtual void DrawFocusRect(        wxWindow *win, wxDC& dc, const wxRect& rect, int flags = 0) override
     {   // ORCA draw focus rectangle to improve consistency between platforms
-        dc.SetPen(  StateColor::darkModeColorFor(wxColour("#009688")));
+        dc.SetPen(  StateColor::darkModeColorFor(wxColour("#694b7c")));
         dc.DrawRectangle(rect);
     }
     virtual void DrawTreeItemButton(   wxWindow *win, wxDC& dc, const wxRect& rect, int flags = 0) override
@@ -115,7 +115,7 @@ public:
         const wxString& text,
         const wxRect& rect,
         int align = wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL,
-        int flags = 0, // wxCONTROL_SELECTED wxCONTROL_FOCUSED wxCONTROL_DISABLED 
+        int flags = 0, // wxCONTROL_SELECTED wxCONTROL_FOCUSED wxCONTROL_DISABLED
         wxEllipsizeMode ellipsizeMode = wxELLIPSIZE_END
     ) override
     {   // ORCA draw custom text to improve consistency between platforms
@@ -1383,7 +1383,7 @@ void ObjectList::show_context_menu(const bool evt_context_menu)
             if (type & itPlate) {
                 int            plate_idx = -1;
                 const ItemType type0      = m_objects_model->GetItemType(item, plate_idx);
-                if (plate_idx >= 0) { 
+                if (plate_idx >= 0) {
                     plater->SetPlateIndexByRightMenuInLeftUI(plate_idx);
                 }
             }
@@ -2032,7 +2032,7 @@ void ObjectList::load_modifier(const wxArrayString& input_files, ModelObject& mo
         dlg.Update(static_cast<int>(100.0f * static_cast<float>(i) / static_cast<float>(input_files.size())),
             _L("Loading file") + ": " + from_path(boost::filesystem::path(input_file).filename()));
         dlg.Fit();
-        
+
         bool is_user_cancel = false;
         Model model;
         try {
@@ -2500,7 +2500,7 @@ bool ObjectList::del_from_cut_object(bool is_cut_connector, bool is_model_part/*
     const wxString title     = is_cut_connector   ? _L("Delete connector from object which is a part of cut") :
                                is_model_part      ? _L("Delete solid part from object which is a part of cut") :
                                is_negative_volume ? _L("Delete negative volume from object which is a part of cut") : "";
-                             
+
     const wxString msg_end   = is_cut_connector   ? ("\n" + _L("To save cut correspondence you can delete all connectors from all related objects.")) : "";
 
     InfoDialog dialog(wxGetApp().plater(), title,
@@ -5555,7 +5555,7 @@ void ObjectList::msw_rescale()
 void ObjectList::sys_color_changed()
 {
     wxGetApp().UpdateDVCDarkUI(this, true);
-    
+
     msw_rescale();
 
     if (m_objects_model) { m_objects_model->sys_color_changed(); }

@@ -273,7 +273,7 @@ void Tab::create_preset_tab()
     //search input
     m_search_item = new StaticBox(m_top_panel);
     StateColor box_colour(std::pair<wxColour, int>(*wxWHITE, StateColor::Normal));
-    StateColor box_border_colour(std::pair<wxColour, int>(wxColour("#009688"), StateColor::Normal)); // ORCA match border color with other input/combo boxes
+    StateColor box_border_colour(std::pair<wxColour, int>(wxColour("#694b7c"), StateColor::Normal)); // JusPrin match border color with other input/combo boxes
 
     m_search_item->SetBackgroundColor(box_colour);
     m_search_item->SetBorderColor(box_border_colour);
@@ -1448,15 +1448,15 @@ void Tab::ApplyConfig(const std::string& opt_key, const boost::any& value) {
         } else if (value.type() == typeid(std::vector<double>)) {
             std::vector<double> vec_value = boost::any_cast<std::vector<double>>(value);
             new_conf.set_key_value(opt_key, new ConfigOptionFloats(vec_value));
-        } 
+        }
          else if (value.type() == typeid(std::vector<int>)) {
             std::vector<int> vec_value = boost::any_cast<std::vector<int>>(value);
             new_conf.set_key_value(opt_key, new ConfigOptionInts(vec_value));
-        } 
+        }
           else if (value.type() == typeid(std::vector<unsigned char>)) {
             std::vector<unsigned char> vec_value = boost::any_cast<std::vector<unsigned char>>(value);
             new_conf.set_key_value(opt_key, new ConfigOptionBools(vec_value));
-        } 
+        }
           else {
             return;
         }
@@ -1464,7 +1464,7 @@ void Tab::ApplyConfig(const std::string& opt_key, const boost::any& value) {
         //std::cerr << "Bad any_cast: " << e.what() << std::endl;
         return;
     }
- 
+
     m_config_manipulation.apply(m_config, &new_conf);
 }
 
@@ -1680,7 +1680,7 @@ void Tab::on_value_change(const std::string& opt_key, const boost::any& value)
         bool       is_safe_to_rotate      = _sparse_infill_pattern == ipRectilinear || _sparse_infill_pattern == ipLine ||
                                  _sparse_infill_pattern == ipZigZag || _sparse_infill_pattern == ipCrossZag ||
                                  _sparse_infill_pattern == ipLockedZag;
-        
+
         auto new_value = boost::any_cast<std::string>(value);
         is_safe_to_rotate = is_safe_to_rotate || new_value.empty();
 
