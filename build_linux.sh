@@ -242,9 +242,9 @@ if [[ -n "${BUILD_ORCA}" ]] ; then
     echo "done"
     echo "Building OrcaSlicer ..."
     if [[ -n "${BUILD_DEBUG}" ]] ; then
-        cmake --build build --config Debug --target OrcaSlicer
+        cmake --build build --config Debug --target JusPrin
     else
-        cmake --build build --config Release --target OrcaSlicer
+        cmake --build build --config Release --target JusPrin
     fi
     echo "Building OrcaSlicer_profile_validator .."
     if [[ -n "${BUILD_DEBUG}" ]] ; then
