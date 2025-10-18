@@ -114,13 +114,13 @@ else ()
 endif ()
 
 if (MINGW)
-    target_link_options(OrcaSlicer PUBLIC "-Wl,-allow-multiple-definition")
-    set_target_properties(OrcaSlicer PROPERTIES PREFIX "")
+    target_link_options(JusPrin PUBLIC "-Wl,-allow-multiple-definition")
+    set_target_properties(JusPrin PROPERTIES PREFIX "")
 endif (MINGW)
 
 if (NOT WIN32 AND NOT APPLE)
     # Binary name on unix like systems (Linux, Unix)
-    set_target_properties(OrcaSlicer PROPERTIES OUTPUT_NAME "jus-prin")
+    set_target_properties(JusPrin PROPERTIES OUTPUT_NAME "jus-prin")
     set(SLIC3R_APP_CMD "jus-prin")
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/dev-utils/platform/unix/build_linux_image.sh.in ${CMAKE_CURRENT_BINARY_DIR}/build_linux_image.sh USE_SOURCE_PERMISSIONS @ONLY)
 endif ()
@@ -211,7 +211,7 @@ if (WIN32)
         endif()
     else ()
         file(TO_NATIVE_PATH "${CMAKE_CURRENT_BINARY_DIR}/resources" WIN_RESOURCES_SYMLINK)
-        add_custom_command(TARGET OrcaSlicer POST_BUILD
+        add_custom_command(TARGET JusPrin POST_BUILD
             COMMAND if not exist "${WIN_RESOURCES_SYMLINK}" "(" mklink /J "${WIN_RESOURCES_SYMLINK}" "${SLIC3R_RESOURCES_DIR_WIN}" ")"
             COMMENT "Symlinking the resources directory into the build tree"
             VERBATIM
