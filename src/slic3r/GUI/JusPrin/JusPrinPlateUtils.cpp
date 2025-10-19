@@ -4,10 +4,12 @@
 #include "slic3r/GUI/Plater.hpp"
 #include "slic3r/GUI/Camera.hpp"
 #include "slic3r/GUI/PartPlate.hpp"
+#include <wx/mstream.h>
 #include <boost/beast/core/detail/base64.hpp>
 #include <openssl/md5.h>
 #include <iomanip>
 #include <sstream>
+#include <cstring>
 #include "slic3r/GUI/Jobs/OrientJob.hpp"
 
 namespace Slic3r { namespace GUI {
@@ -73,9 +75,10 @@ static std::string encode_thumbnail_to_base64(const ThumbnailData& thumbnail_dat
     }
 
     // Get the binary data
-    const size_t data_size = stream.GetSize();
+    wxStreamBuffer* buf = stream.GetOutputStreamBuffer();
+    const size_t data_size = buf->GetBufferSize();
     std::vector<unsigned char> buffer(data_size);
-    stream.CopyTo(buffer.data(), data_size);
+    std::memcpy(buffer.data(), buf->GetBufferStart(), data_size);
 
     // Convert to base64
     std::string base64_data;
