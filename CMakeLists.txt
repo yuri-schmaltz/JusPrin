@@ -134,7 +134,7 @@ endif ()
 
 # Proposal for C++ unit tests and sandboxes
 option(SLIC3R_BUILD_SANDBOXES   "Build development sandboxes" OFF)
-option(BUILD_TESTS       "Build unit tests" OFF)
+option(BUILD_TESTS       "Build unit tests" ON)  # P1.1: Enabled by default for better quality assurance
 option(ORCA_TOOLS       "Build Orca tools" OFF)
 
 if (IS_CROSS_COMPILE)

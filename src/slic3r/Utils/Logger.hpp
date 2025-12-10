@@ -1,5 +1,17 @@
-#ifndef slic3r_Logger_hpp_
-#define slic3r_Logger_hpp_
+/**
+ * @file Logger.hpp
+ * @brief Thread-safe logging system for JusPrin
+ *
+ * Provides a centralized, structured logging facility with multiple
+ * log levels, file output, and console output. Thread-safe for use
+ * in multi-threaded environments.
+ *
+ * @author JusPrin Development Team
+ * @date 2024
+ */
+
+#ifndef SLIC3R_UTILS_LOGGER_HPP
+#define SLIC3R_UTILS_LOGGER_HPP
 
 #include <string>
 #include <fstream>
@@ -7,10 +19,20 @@
 #include <chrono>
 #include <iomanip>
 #include <sstream>
+#include <iostream>
 
-namespace Slic3r { namespace Logger {
+namespace Slic3r {
 
-enum class LogLevel { ERROR, WARNING, INFO, DEBUG };
+/**
+ * @enum LogLevel
+ * @brief Severity levels for log messages
+ */
+enum class LogLevel {
+    ERROR,   ///< Critical errors requiring immediate attention
+    WARNING, ///< Warnings about potential issues
+    INFO,    ///< Informational messages about normal operation
+    DEBUG    ///< Detailed debug information for development
+};
 
 /**
  * @brief Structured logging system for JusPrin
@@ -152,6 +174,7 @@ inline void init(const std::string& filepath, LogLevel min_level = LogLevel::INF
     get_logger().init(filepath, min_level, console);
 }
 
-}} // namespace Slic3r::Logger
+}
+} // namespace Slic3r::Logger
 
 #endif // slic3r_Logger_hpp_
