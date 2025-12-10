@@ -11,29 +11,20 @@
 #include "slic3r/GUI/Jobs/PlaterWorker.hpp"
 #include "../GUI/MsgDialog.hpp"
 
-
-namespace Slic3r {
-namespace GUI {
+namespace Slic3r { namespace GUI {
 const float MIN_PA_K_VALUE = 0.0;
 const float MAX_PA_K_VALUE = 1.0;
 
-std::unique_ptr<Worker> CalibUtils::print_worker;
-wxString wxstr_temp_dir = fs::path(fs::temp_directory_path() / "calib").wstring();
-static const std::string temp_dir = wxstr_temp_dir.utf8_string();
+std::unique_ptr<Worker>  CalibUtils::print_worker;
+wxString                 wxstr_temp_dir  = fs::path(fs::temp_directory_path() / "calib").wstring();
+static const std::string temp_dir        = wxstr_temp_dir.utf8_string();
 static const std::string temp_gcode_path = temp_dir + "/temp.gcode";
 static const std::string path            = temp_dir + "/test.3mf";
 static const std::string config_3mf_path = temp_dir + "/test_config.3mf";
 
 static std::string MachineBedTypeString[7] = {
-    "auto",
-    "suprtack",
-    "pc",
-    "ep",
-    "pei",
-    "pte",
-    "pct",
+    "auto", "suprtack", "pc", "ep", "pei", "pte", "pct",
 };
-
 
 wxString get_nozzle_volume_type_name(NozzleVolumeType type)
 {
@@ -47,11 +38,9 @@ wxString get_nozzle_volume_type_name(NozzleVolumeType type)
 
 std::string get_calib_mode_name(CalibMode cali_mode, int stage)
 {
-    switch(cali_mode) {
-    case CalibMode::Calib_PA_Line:
-        return "pa_line_calib_mode";
-    case CalibMode::Calib_PA_Pattern:
-        return "pa_pattern_calib_mode";
+    switch (cali_mode) {
+    case CalibMode::Calib_PA_Line: return "pa_line_calib_mode";
+    case CalibMode::Calib_PA_Pattern: return "pa_pattern_calib_mode";
     case CalibMode::Calib_Flow_Rate:
         if (stage == 1)
             return "flow_rate_coarse_calib_mode";
@@ -59,23 +48,14 @@ std::string get_calib_mode_name(CalibMode cali_mode, int stage)
             return "flow_rate_fine_calib_mode";
         else
             return "flow_rate_coarse_calib_mode";
-    case CalibMode::Calib_Temp_Tower:
-        return "temp_tower_calib_mode";
-    case CalibMode::Calib_Vol_speed_Tower:
-        return "vol_speed_tower_calib_mode";
-    case CalibMode::Calib_VFA_Tower:
-        return "vfa_tower_calib_mode";
-    case CalibMode::Calib_Retraction_tower:
-        return "retration_tower_calib_mode";
-    case CalibMode::Calib_Input_shaping_freq:
-        return "input_shaping_freq_calib_mode";
-    case CalibMode::Calib_Input_shaping_damp:
-        return "input_shaping_damp_calib_mode";
-    case CalibMode::Calib_Junction_Deviation:
-        return "junction_deviation_calib_mode";
-    default:
-        assert(false);
-        return "";
+    case CalibMode::Calib_Temp_Tower: return "temp_tower_calib_mode";
+    case CalibMode::Calib_Vol_speed_Tower: return "vol_speed_tower_calib_mode";
+    case CalibMode::Calib_VFA_Tower: return "vfa_tower_calib_mode";
+    case CalibMode::Calib_Retraction_tower: return "retration_tower_calib_mode";
+    case CalibMode::Calib_Input_shaping_freq: return "input_shaping_freq_calib_mode";
+    case CalibMode::Calib_Input_shaping_damp: return "input_shaping_damp_calib_mode";
+    case CalibMode::Calib_Junction_Deviation: return "junction_deviation_calib_mode";
+    default: assert(false); return "";
     }
 }
 
@@ -90,27 +70,33 @@ static wxString to_wstring_name(std::string name)
     return wxEmptyString;
 }
 
-static bool is_same_nozzle_diameters(const DynamicPrintConfig &full_config, const MachineObject *obj, wxString& error_msg)
+static bool is_same_nozzle_diameters(const DynamicPrintConfig& full_config, const MachineObject* obj, wxString& error_msg)
 {
     if (obj == nullptr)
         return true;
 
     try {
-        std::string nozzle_type;
-        const ConfigOptionEnum<NozzleType> * config_nozzle_type = full_config.option<ConfigOptionEnum<NozzleType>>("nozzle_type");
-        nozzle_type = NozzleTypeEumnToStr[config_nozzle_type->value];
+        std::string                         nozzle_type;
+        const ConfigOptionEnum<NozzleType>* config_nozzle_type = full_config.option<ConfigOptionEnum<NozzleType>>("nozzle_type");
+        nozzle_type                                            = NozzleTypeEumnToStr[config_nozzle_type->value];
 
         auto opt_nozzle_diameters = full_config.option<ConfigOptionFloats>("nozzle_diameter");
         if (opt_nozzle_diameters != nullptr) {
             float preset_nozzle_diameter = opt_nozzle_diameters->get_at(0);
             if (preset_nozzle_diameter != obj->m_extder_data.extders[0].current_nozzle_diameter) {
-                wxString nozzle_in_preset  = wxString::Format(_L("nozzle in preset: %s %s"), wxString::Format("%.1f", preset_nozzle_diameter).ToStdString(), to_wstring_name(nozzle_type));
-                wxString nozzle_in_printer = wxString::Format(_L("nozzle memorized: %.1f %s"), obj->m_extder_data.extders[0].current_nozzle_diameter, to_wstring_name(NozzleTypeEumnToStr[obj->m_extder_data.extders[0].current_nozzle_type]));
+                wxString nozzle_in_preset  = wxString::Format(_L("nozzle in preset: %s %s"),
+                                                              wxString::Format("%.1f", preset_nozzle_diameter).ToStdString(),
+                                                              to_wstring_name(nozzle_type));
+                wxString nozzle_in_printer = wxString::Format(_L("nozzle memorized: %.1f %s"),
+                                                              obj->m_extder_data.extders[0].current_nozzle_diameter,
+                                                              to_wstring_name(
+                                                                  NozzleTypeEumnToStr[obj->m_extder_data.extders[0].current_nozzle_type]));
 
-                error_msg = _L("Your nozzle diameter in preset is not consistent with memorized nozzle diameter. Did you change your nozzle lately?") + "\n    " + nozzle_in_preset +
-                            "\n    " + nozzle_in_printer + "\n";
+                error_msg = _L("Your nozzle diameter in preset is not consistent with memorized nozzle diameter. Did you change your "
+                               "nozzle lately?") +
+                            "\n    " + nozzle_in_preset + "\n    " + nozzle_in_printer + "\n";
                 return false;
-            } 
+            }
         }
 
     } catch (...) {}
@@ -118,20 +104,22 @@ static bool is_same_nozzle_diameters(const DynamicPrintConfig &full_config, cons
     return true;
 }
 
-static bool is_same_nozzle_type(const DynamicPrintConfig &full_config, const MachineObject *obj, wxString& error_msg)
+static bool is_same_nozzle_type(const DynamicPrintConfig& full_config, const MachineObject* obj, wxString& error_msg)
 {
     if (obj == nullptr)
         return true;
 
-    NozzleType nozzle_type = obj->m_extder_data.extders[0].current_nozzle_type;
-    int printer_nozzle_hrc = Print::get_hrc_by_nozzle_type(nozzle_type);
+    NozzleType nozzle_type        = obj->m_extder_data.extders[0].current_nozzle_type;
+    int        printer_nozzle_hrc = Print::get_hrc_by_nozzle_type(nozzle_type);
 
     if (full_config.has("required_nozzle_HRC")) {
         int filament_nozzle_hrc = full_config.opt_int("required_nozzle_HRC", 0);
         if (abs(filament_nozzle_hrc) > abs(printer_nozzle_hrc)) {
-            BOOST_LOG_TRIVIAL(info) << "filaments hardness mismatch:  printer_nozzle_hrc = " << printer_nozzle_hrc << ", filament_nozzle_hrc = " << filament_nozzle_hrc;
+            BOOST_LOG_TRIVIAL(info) << "filaments hardness mismatch:  printer_nozzle_hrc = " << printer_nozzle_hrc
+                                    << ", filament_nozzle_hrc = " << filament_nozzle_hrc;
             std::string filament_type = full_config.opt_string("filament_type", 0);
-            error_msg = wxString::Format(_L("*Printing %s material with %s may cause nozzle damage"), filament_type, to_wstring_name(NozzleTypeEumnToStr[obj->m_extder_data.extders[0].current_nozzle_type]));
+            error_msg                 = wxString::Format(_L("*Printing %s material with %s may cause nozzle damage"), filament_type,
+                                                         to_wstring_name(NozzleTypeEumnToStr[obj->m_extder_data.extders[0].current_nozzle_type]));
             error_msg += "\n";
 
             MessageDialog msg_dlg(nullptr, error_msg, wxEmptyString, wxICON_WARNING | wxOK | wxCANCEL);
@@ -149,15 +137,15 @@ static bool is_same_nozzle_type(const DynamicPrintConfig &full_config, const Mac
     return true;
 }
 
-static bool check_nozzle_diameter_and_type(const DynamicPrintConfig &full_config, wxString& error_msg)
+static bool check_nozzle_diameter_and_type(const DynamicPrintConfig& full_config, wxString& error_msg)
 {
-    DeviceManager *dev = Slic3r::GUI::wxGetApp().getDeviceManager();
+    DeviceManager* dev = Slic3r::GUI::wxGetApp().getDeviceManager();
     if (!dev) {
         error_msg = _L("Need select printer");
         return false;
     }
 
-    MachineObject *obj = dev->get_selected_machine();
+    MachineObject* obj = dev->get_selected_machine();
     if (obj == nullptr) {
         error_msg = _L("Need select printer");
         return false;
@@ -181,20 +169,16 @@ CalibMode CalibUtils::get_calib_mode_by_name(const std::string name, int& cali_s
     if (name == "pa_line_calib_mode") {
         cali_stage = 0;
         return CalibMode::Calib_PA_Line;
-    }
-    else if (name == "pa_pattern_calib_mode") {
+    } else if (name == "pa_pattern_calib_mode") {
         cali_stage = 1;
         return CalibMode::Calib_PA_Line;
-    }
-    else if (name == "flow_rate_coarse_calib_mode") {
+    } else if (name == "flow_rate_coarse_calib_mode") {
         cali_stage = 1;
         return CalibMode::Calib_Flow_Rate;
-    }
-    else if (name == "flow_rate_fine_calib_mode") {
+    } else if (name == "flow_rate_fine_calib_mode") {
         cali_stage = 2;
         return CalibMode::Calib_Flow_Rate;
-    }
-    else if (name == "temp_tower_calib_mode")
+    } else if (name == "temp_tower_calib_mode")
         return CalibMode::Calib_Temp_Tower;
     else if (name == "vol_speed_tower_calib_mode")
         return CalibMode::Calib_Vol_speed_Tower;
@@ -237,14 +221,13 @@ bool CalibUtils::validate_input_k_value(wxString k_text, float* output_value)
         return false;
     }
 
-    double k_value = 0.0;
-    try {
-        if(!k_text.ToDouble(&k_value))
-            return false;
+    double k_value  = 0.0;
+    auto   k_result = Slic3r::Utils::parse_double_safe(k_text, 0.0, 2.0);
+    if (!k_result.success) {
+        *output_value = default_k;
+        return false;
     }
-    catch (...) {
-        ;
-    }
+    k_value = k_result.value;
 
     if (k_value < 0 || k_value > 0.3) {
         *output_value = default_k;
@@ -255,7 +238,8 @@ bool CalibUtils::validate_input_k_value(wxString k_text, float* output_value)
     return true;
 };
 
-bool CalibUtils::validate_input_flow_ratio(wxString flow_ratio, float* output_value) {
+bool CalibUtils::validate_input_flow_ratio(wxString flow_ratio, float* output_value)
+{
     float default_flow_ratio = 1.0f;
 
     if (flow_ratio.IsEmpty()) {
@@ -266,8 +250,7 @@ bool CalibUtils::validate_input_flow_ratio(wxString flow_ratio, float* output_va
     double flow_ratio_value = 0.0;
     try {
         flow_ratio.ToDouble(&flow_ratio_value);
-    }
-    catch (...) {
+    } catch (...) {
         ;
     }
 
@@ -280,9 +263,9 @@ bool CalibUtils::validate_input_flow_ratio(wxString flow_ratio, float* output_va
     return true;
 }
 
-static void cut_model(Model &model, double z, ModelObjectCutAttributes attributes)
+static void cut_model(Model& model, double z, ModelObjectCutAttributes attributes)
 {
-    size_t obj_idx = 0;
+    size_t obj_idx      = 0;
     size_t instance_idx = 0;
     if (!attributes.has(ModelObjectCutAttribute::KeepUpper) && !attributes.has(ModelObjectCutAttribute::KeepLower))
         return;
@@ -294,8 +277,8 @@ static void cut_model(Model &model, double z, ModelObjectCutAttributes attribute
     const auto  new_objects = cut.perform_with_plane();
     model.delete_object(obj_idx);
 
-    for (ModelObject *model_object : new_objects) {
-        auto *object = model.add_object(*model_object);
+    for (ModelObject* model_object : new_objects) {
+        auto* object = model.add_object(*model_object);
         object->sort_volumes(true);
         std::string object_name = object->name.empty() ? fs::path(object->input_file).filename().string() : object->name;
         object->ensure_on_bed();
@@ -308,21 +291,21 @@ static void read_model_from_file(const std::string& input_file, Model& model)
     ConfigSubstitutionContext config_substitutions{ForwardCompatibilitySubstitutionRule::Enable};
     int                       plate_to_slice = 0;
 
-    bool                  is_bbl_3mf;
-    Semver                file_version;
-    DynamicPrintConfig    config;
-    PlateDataPtrs         plate_data_src;
-    std::vector<Preset *> project_presets;
+    bool                 is_bbl_3mf;
+    Semver               file_version;
+    DynamicPrintConfig   config;
+    PlateDataPtrs        plate_data_src;
+    std::vector<Preset*> project_presets;
 
-    model = Model::read_from_file(input_file, &config, &config_substitutions, strategy, &plate_data_src, &project_presets,
-        &is_bbl_3mf, &file_version, nullptr, nullptr, nullptr, plate_to_slice);
+    model = Model::read_from_file(input_file, &config, &config_substitutions, strategy, &plate_data_src, &project_presets, &is_bbl_3mf,
+                                  &file_version, nullptr, nullptr, nullptr, plate_to_slice);
 
     model.add_default_instances();
     for (auto object : model.objects)
         object->ensure_on_bed();
 }
 
-std::array<Vec3d, 4> get_cut_plane_points(const BoundingBoxf3 &bbox, const double &cut_height)
+std::array<Vec3d, 4> get_cut_plane_points(const BoundingBoxf3& bbox, const double& cut_height)
 {
     std::array<Vec3d, 4> plane_pts;
     plane_pts[0] = Vec3d(bbox.min(0), bbox.min(1), cut_height);
@@ -334,11 +317,11 @@ std::array<Vec3d, 4> get_cut_plane_points(const BoundingBoxf3 &bbox, const doubl
 
 void CalibUtils::calib_PA(const X1CCalibInfos& calib_infos, int mode, wxString& error_message)
 {
-    DeviceManager *dev = Slic3r::GUI::wxGetApp().getDeviceManager();
+    DeviceManager* dev = Slic3r::GUI::wxGetApp().getDeviceManager();
     if (!dev)
         return;
 
-    MachineObject *obj_ = dev->get_selected_machine();
+    MachineObject* obj_ = dev->get_selected_machine();
     if (obj_ == nullptr)
         return;
 
@@ -348,11 +331,11 @@ void CalibUtils::calib_PA(const X1CCalibInfos& calib_infos, int mode, wxString& 
 
 void CalibUtils::emit_get_PA_calib_results(float nozzle_diameter)
 {
-    DeviceManager *dev = Slic3r::GUI::wxGetApp().getDeviceManager();
+    DeviceManager* dev = Slic3r::GUI::wxGetApp().getDeviceManager();
     if (!dev)
         return;
 
-    MachineObject *obj_ = dev->get_selected_machine();
+    MachineObject* obj_ = dev->get_selected_machine();
     if (obj_ == nullptr)
         return;
 
@@ -361,11 +344,11 @@ void CalibUtils::emit_get_PA_calib_results(float nozzle_diameter)
 
 bool CalibUtils::get_PA_calib_results(std::vector<PACalibResult>& pa_calib_results)
 {
-    DeviceManager *dev = Slic3r::GUI::wxGetApp().getDeviceManager();
+    DeviceManager* dev = Slic3r::GUI::wxGetApp().getDeviceManager();
     if (!dev)
         return false;
 
-    MachineObject *obj_ = dev->get_selected_machine();
+    MachineObject* obj_ = dev->get_selected_machine();
     if (obj_ == nullptr)
         return false;
 
@@ -373,26 +356,26 @@ bool CalibUtils::get_PA_calib_results(std::vector<PACalibResult>& pa_calib_resul
     return pa_calib_results.size() > 0;
 }
 
-void CalibUtils::emit_get_PA_calib_infos(const PACalibExtruderInfo &cali_info)
+void CalibUtils::emit_get_PA_calib_infos(const PACalibExtruderInfo& cali_info)
 {
-    DeviceManager *dev = Slic3r::GUI::wxGetApp().getDeviceManager();
+    DeviceManager* dev = Slic3r::GUI::wxGetApp().getDeviceManager();
     if (!dev)
         return;
 
-    MachineObject *obj_ = dev->get_selected_machine();
+    MachineObject* obj_ = dev->get_selected_machine();
     if (obj_ == nullptr)
         return;
 
     obj_->command_get_pa_calibration_tab(cali_info);
 }
 
-bool CalibUtils::get_PA_calib_tab(std::vector<PACalibResult> &pa_calib_infos)
+bool CalibUtils::get_PA_calib_tab(std::vector<PACalibResult>& pa_calib_infos)
 {
-    DeviceManager *dev = Slic3r::GUI::wxGetApp().getDeviceManager();
+    DeviceManager* dev = Slic3r::GUI::wxGetApp().getDeviceManager();
     if (!dev)
         return false;
 
-    MachineObject *obj_ = dev->get_selected_machine();
+    MachineObject* obj_ = dev->get_selected_machine();
     if (obj_ == nullptr)
         return false;
 
@@ -402,7 +385,7 @@ bool CalibUtils::get_PA_calib_tab(std::vector<PACalibResult> &pa_calib_infos)
     return obj_->has_get_pa_calib_tab;
 }
 
-void CalibUtils::set_PA_calib_result(const std::vector<PACalibResult> &pa_calib_values, bool is_auto_cali)
+void CalibUtils::set_PA_calib_result(const std::vector<PACalibResult>& pa_calib_values, bool is_auto_cali)
 {
     DeviceManager* dev = Slic3r::GUI::wxGetApp().getDeviceManager();
     if (!dev)
@@ -443,11 +426,11 @@ void CalibUtils::delete_PA_calib_result(const PACalibIndexInfo& pa_calib_info)
 
 void CalibUtils::calib_flowrate_X1C(const X1CCalibInfos& calib_infos, std::string& error_message)
 {
-    DeviceManager *dev = Slic3r::GUI::wxGetApp().getDeviceManager();
+    DeviceManager* dev = Slic3r::GUI::wxGetApp().getDeviceManager();
     if (!dev)
         return;
 
-    MachineObject *obj_ = dev->get_selected_machine();
+    MachineObject* obj_ = dev->get_selected_machine();
     if (obj_ == nullptr)
         return;
 
@@ -460,11 +443,11 @@ void CalibUtils::calib_flowrate_X1C(const X1CCalibInfos& calib_infos, std::strin
 
 void CalibUtils::emit_get_flow_ratio_calib_results(float nozzle_diameter)
 {
-    DeviceManager *dev = Slic3r::GUI::wxGetApp().getDeviceManager();
+    DeviceManager* dev = Slic3r::GUI::wxGetApp().getDeviceManager();
     if (!dev)
         return;
 
-    MachineObject *obj_ = dev->get_selected_machine();
+    MachineObject* obj_ = dev->get_selected_machine();
     if (obj_ == nullptr)
         return;
 
@@ -473,11 +456,11 @@ void CalibUtils::emit_get_flow_ratio_calib_results(float nozzle_diameter)
 
 bool CalibUtils::get_flow_ratio_calib_results(std::vector<FlowRatioCalibResult>& flow_ratio_calib_results)
 {
-    DeviceManager *dev = Slic3r::GUI::wxGetApp().getDeviceManager();
+    DeviceManager* dev = Slic3r::GUI::wxGetApp().getDeviceManager();
     if (!dev)
         return false;
 
-    MachineObject *obj_ = dev->get_selected_machine();
+    MachineObject* obj_ = dev->get_selected_machine();
     if (obj_ == nullptr)
         return false;
 
@@ -485,7 +468,7 @@ bool CalibUtils::get_flow_ratio_calib_results(std::vector<FlowRatioCalibResult>&
     return flow_ratio_calib_results.size() > 0;
 }
 
-bool CalibUtils::calib_flowrate(int pass, const CalibInfo &calib_info, wxString &error_message)
+bool CalibUtils::calib_flowrate(int pass, const CalibInfo& calib_info, wxString& error_message)
 {
     if (pass != 1 && pass != 2)
         return false;
@@ -505,7 +488,7 @@ bool CalibUtils::calib_flowrate(int pass, const CalibInfo &calib_info, wxString 
 
     /// --- scale ---
     // model is created for a 0.4 nozzle, scale z with nozzle size.
-    const ConfigOptionFloats *nozzle_diameter_config = printer_config.option<ConfigOptionFloats>("nozzle_diameter");
+    const ConfigOptionFloats* nozzle_diameter_config = printer_config.option<ConfigOptionFloats>("nozzle_diameter");
     assert(nozzle_diameter_config->values.size() > 0);
     float nozzle_diameter = nozzle_diameter_config->values[0];
     float xyScale         = nozzle_diameter / 0.6;
@@ -515,9 +498,10 @@ bool CalibUtils::calib_flowrate(int pass, const CalibInfo &calib_info, wxString 
     first_layer_height        = std::max(first_layer_height, layer_height);
 
     float zscale = (first_layer_height + 6 * layer_height) / 1.4;
-    for (auto _obj : model.objects) _obj->scale(1, 1, zscale);
+    for (auto _obj : model.objects)
+        _obj->scale(1, 1, zscale);
     // only enlarge
-    //if (xyScale > 1.2) {
+    // if (xyScale > 1.2) {
     //    for (auto _obj : model.objects) _obj->scale(xyScale, xyScale, zscale);
     //} else {
     //    for (auto _obj : model.objects) _obj->scale(1, 1, zscale);
@@ -540,7 +524,7 @@ bool CalibUtils::calib_flowrate(int pass, const CalibInfo &calib_info, wxString 
         _obj->config.set_key_value("bottom_shell_layers", new ConfigOptionInt(1));
         _obj->config.set_key_value("top_shell_layers", new ConfigOptionInt(5));
         _obj->config.set_key_value("detect_thin_wall", new ConfigOptionBool(true));
-        _obj->config.set_key_value("filter_out_gap_fill", new ConfigOptionFloat(0));  // OrcaSlicer parameter
+        _obj->config.set_key_value("filter_out_gap_fill", new ConfigOptionFloat(0)); // OrcaSlicer parameter
         _obj->config.set_key_value("sparse_infill_pattern", new ConfigOptionEnum<InfillPattern>(ipRectilinear));
         _obj->config.set_key_value("top_surface_line_width", new ConfigOptionFloatOrPercent(nozzle_diameter * 1.2f, false));
         _obj->config.set_key_value("internal_solid_infill_line_width", new ConfigOptionFloatOrPercent(nozzle_diameter * 1.2f, false));
@@ -555,7 +539,8 @@ bool CalibUtils::calib_flowrate(int pass, const CalibInfo &calib_info, wxString 
         std::string obj_name = _obj->name;
         assert(obj_name.length() > 9);
         obj_name = obj_name.substr(9);
-        if (obj_name[0] == 'm') obj_name[0] = '-';
+        if (obj_name[0] == 'm')
+            obj_name[0] = '-';
         auto modifier = stof(obj_name);
         _obj->config.set_key_value("print_flow_ratio", new ConfigOptionFloat(1.0f + modifier / 100.f));
     }
@@ -576,24 +561,23 @@ bool CalibUtils::calib_flowrate(int pass, const CalibInfo &calib_info, wxString 
     if (!process_and_store_3mf(&model, full_config, params, error_message))
         return false;
 
-    DeviceManager *dev = Slic3r::GUI::wxGetApp().getDeviceManager();
+    DeviceManager* dev = Slic3r::GUI::wxGetApp().getDeviceManager();
     if (!dev) {
         error_message = _L("Need select printer");
         return false;
     }
 
-    MachineObject *obj_ = dev->get_selected_machine();
+    MachineObject* obj_ = dev->get_selected_machine();
     if (obj_ == nullptr) {
         error_message = _L("Need select printer");
         return false;
     }
 
-
     send_to_print(calib_info, error_message, pass);
     return true;
 }
 
-void CalibUtils::calib_pa_pattern(const CalibInfo &calib_info, Model& model)
+void CalibUtils::calib_pa_pattern(const CalibInfo& calib_info, Model& model)
 {
     DynamicPrintConfig& print_config    = calib_info.print_prest->config;
     DynamicPrintConfig& filament_config = calib_info.filament_prest->config;
@@ -612,10 +596,10 @@ void CalibUtils::calib_pa_pattern(const CalibInfo &calib_info, Model& model)
     }
 
     print_config.set_key_value("outer_wall_speed",
-        new ConfigOptionFloat(CalibPressureAdvance::find_optimal_PA_speed(
-            full_config, print_config.get_abs_value("line_width"),
-            print_config.get_abs_value("layer_height"), 0)));
-    
+                               new ConfigOptionFloat(
+                                   CalibPressureAdvance::find_optimal_PA_speed(full_config, print_config.get_abs_value("line_width"),
+                                                                               print_config.get_abs_value("layer_height"), 0)));
+
     for (const auto& opt : SuggestedConfigCalibPAPattern().nozzle_ratio_pairs) {
         print_config.set_key_value(opt.first, new ConfigOptionFloatOrPercent(nozzle_diameter * opt.second / 100, false));
     }
@@ -625,36 +609,36 @@ void CalibUtils::calib_pa_pattern(const CalibInfo &calib_info, Model& model)
     }
 
     print_config.set_key_value(SuggestedConfigCalibPAPattern().brim_pair.first,
-        new ConfigOptionEnum<BrimType>(SuggestedConfigCalibPAPattern().brim_pair.second));
+                               new ConfigOptionEnum<BrimType>(SuggestedConfigCalibPAPattern().brim_pair.second));
 
-    //DynamicPrintConfig full_config;
+    // DynamicPrintConfig full_config;
     full_config.apply(FullPrintConfig::defaults());
     full_config.apply(print_config);
     full_config.apply(filament_config);
     full_config.apply(printer_config);
 
-    Vec3d plate_origin(0, 0, 0);
-    auto *object = model.objects[0];
+    Vec3d                       plate_origin(0, 0, 0);
+    auto*                       object = model.objects[0];
     CalibPressureAdvancePattern pa_pattern(calib_info.params, full_config, true, *object, plate_origin);
 
-    Pointfs bedfs         = full_config.opt<ConfigOptionPoints>("printable_area")->values;
-    double  current_width = bedfs[2].x() - bedfs[0].x();
-    double  current_depth = bedfs[2].y() - bedfs[0].y();
+    Pointfs bedfs             = full_config.opt<ConfigOptionPoints>("printable_area")->values;
+    double  current_width     = bedfs[2].x() - bedfs[0].x();
+    double  current_depth     = bedfs[2].y() - bedfs[0].y();
     Vec3d   half_pattern_size = Vec3d(pa_pattern.print_size_x() / 2, pa_pattern.print_size_y() / 2, 0);
     Vec3d   offset            = Vec3d(current_width / 2, current_depth / 2, 0) - half_pattern_size;
     pa_pattern.set_start_offset(offset);
 
     model.plates_custom_gcodes[0] = pa_pattern.generate_custom_gcodes(full_config, true, *object, plate_origin);
-    model.calib_pa_pattern = std::make_unique<CalibPressureAdvancePattern>(pa_pattern);
+    model.calib_pa_pattern        = std::make_unique<CalibPressureAdvancePattern>(pa_pattern);
 }
 
-bool CalibUtils::calib_generic_PA(const CalibInfo &calib_info, wxString &error_message)
+bool CalibUtils::calib_generic_PA(const CalibInfo& calib_info, wxString& error_message)
 {
-    const Calib_Params &params = calib_info.params;
+    const Calib_Params& params = calib_info.params;
     if (params.mode != CalibMode::Calib_PA_Line && params.mode != CalibMode::Calib_PA_Pattern)
         return false;
 
-    Model model;
+    Model       model;
     std::string input_file;
     if (params.mode == CalibMode::Calib_PA_Line)
         input_file = Slic3r::resources_dir() + "/calib/pressure_advance/pressure_advance_test.stl";
@@ -681,31 +665,30 @@ bool CalibUtils::calib_generic_PA(const CalibInfo &calib_info, wxString &error_m
     if (!process_and_store_3mf(&model, full_config, params, error_message))
         return false;
 
-    DeviceManager *dev = Slic3r::GUI::wxGetApp().getDeviceManager();
+    DeviceManager* dev = Slic3r::GUI::wxGetApp().getDeviceManager();
     if (!dev) {
         error_message = _L("Need select printer");
         return false;
     }
 
-    MachineObject *obj_ = dev->get_selected_machine();
+    MachineObject* obj_ = dev->get_selected_machine();
     if (obj_ == nullptr) {
         error_message = _L("Need select printer");
         return false;
     }
 
-
     send_to_print(calib_info, error_message);
     return true;
 }
 
-void CalibUtils::calib_temptue(const CalibInfo &calib_info, wxString &error_message)
+void CalibUtils::calib_temptue(const CalibInfo& calib_info, wxString& error_message)
 {
-    const Calib_Params &params = calib_info.params;
+    const Calib_Params& params = calib_info.params;
     if (params.mode != CalibMode::Calib_Temp_Tower)
         return;
 
-    Model                     model;
-    std::string               input_file = Slic3r::resources_dir() + "/calib/temperature_tower/temperature_tower.stl";
+    Model       model;
+    std::string input_file = Slic3r::resources_dir() + "/calib/temperature_tower/temperature_tower.stl";
     read_model_from_file(input_file, model);
 
     // cut upper
@@ -734,7 +717,7 @@ void CalibUtils::calib_temptue(const CalibInfo &calib_info, wxString &error_mess
     DynamicPrintConfig filament_config = calib_info.filament_prest->config;
     DynamicPrintConfig printer_config  = calib_info.printer_prest->config;
 
-    auto start_temp      = lround(params.start);
+    auto start_temp = lround(params.start);
     filament_config.set_key_value("nozzle_temperature_initial_layer", new ConfigOptionInts(1, (int) start_temp));
     filament_config.set_key_value("nozzle_temperature", new ConfigOptionInts(1, (int) start_temp));
     filament_config.set_key_value("curr_bed_type", new ConfigOptionEnum<BedType>(calib_info.bed_type));
@@ -758,9 +741,9 @@ void CalibUtils::calib_temptue(const CalibInfo &calib_info, wxString &error_mess
     send_to_print(calib_info, error_message);
 }
 
-void CalibUtils::calib_max_vol_speed(const CalibInfo &calib_info, wxString &error_message)
+void CalibUtils::calib_max_vol_speed(const CalibInfo& calib_info, wxString& error_message)
 {
-    const Calib_Params &params = calib_info.params;
+    const Calib_Params& params = calib_info.params;
     if (params.mode != CalibMode::Calib_Vol_speed_Tower)
         return;
 
@@ -772,21 +755,22 @@ void CalibUtils::calib_max_vol_speed(const CalibInfo &calib_info, wxString &erro
     DynamicPrintConfig filament_config = calib_info.filament_prest->config;
     DynamicPrintConfig printer_config  = calib_info.printer_prest->config;
 
-    auto obj             = model.objects[0];
+    auto         obj       = model.objects[0];
     auto         bed_shape = printer_config.option<ConfigOptionPoints>("printable_area")->values;
     BoundingBoxf bed_ext   = get_extents(bed_shape);
     auto         scale_obj = (bed_ext.size().x() - 10) / obj->bounding_box_exact().size().x();
     if (scale_obj < 1.0)
         obj->scale(scale_obj, 1, 1);
 
-    const ConfigOptionFloats *nozzle_diameter_config = printer_config.option<ConfigOptionFloats>("nozzle_diameter");
+    const ConfigOptionFloats* nozzle_diameter_config = printer_config.option<ConfigOptionFloats>("nozzle_diameter");
     assert(nozzle_diameter_config->values.size() > 0);
     double nozzle_diameter = nozzle_diameter_config->values[0];
     double line_width      = nozzle_diameter * 1.75;
     double layer_height    = nozzle_diameter * 0.8;
 
     auto max_lh = printer_config.option<ConfigOptionFloats>("max_layer_height");
-    if (max_lh->values[0] < layer_height) max_lh->values[0] = {layer_height};
+    if (max_lh->values[0] < layer_height)
+        max_lh->values[0] = {layer_height};
 
     filament_config.set_key_value("filament_max_volumetric_speed", new ConfigOptionFloats{50});
     filament_config.set_key_value("slow_down_layer_time", new ConfigOptionInts{0});
@@ -809,14 +793,15 @@ void CalibUtils::calib_max_vol_speed(const CalibInfo &calib_info, wxString &erro
     obj->config.set_key_value("brim_object_gap", new ConfigOptionFloat(0.0));
 
     //  cut upper
-    auto obj_bb = obj->bounding_box_exact();
+    auto   obj_bb = obj->bounding_box_exact();
     double height = (params.end - params.start + 1) / params.step;
     if (height < obj_bb.size().z()) {
         cut_model(model, height, ModelObjectCutAttribute::KeepLower);
     }
 
-    auto new_params  = params;
-    auto mm3_per_mm  = Flow(line_width, layer_height, nozzle_diameter).mm3_per_mm() * filament_config.option<ConfigOptionFloats>("filament_flow_ratio")->get_at(0);
+    auto new_params = params;
+    auto mm3_per_mm = Flow(line_width, layer_height, nozzle_diameter).mm3_per_mm() *
+                      filament_config.option<ConfigOptionFloats>("filament_flow_ratio")->get_at(0);
     new_params.end   = params.end / mm3_per_mm;
     new_params.start = params.start / mm3_per_mm;
     new_params.step  = params.step / mm3_per_mm;
@@ -834,13 +819,13 @@ void CalibUtils::calib_max_vol_speed(const CalibInfo &calib_info, wxString &erro
     send_to_print(calib_info, error_message);
 }
 
-void CalibUtils::calib_VFA(const CalibInfo &calib_info, wxString &error_message)
+void CalibUtils::calib_VFA(const CalibInfo& calib_info, wxString& error_message)
 {
-    const Calib_Params &params = calib_info.params;
+    const Calib_Params& params = calib_info.params;
     if (params.mode != CalibMode::Calib_VFA_Tower)
         return;
 
-    Model model;
+    Model       model;
     std::string input_file = Slic3r::resources_dir() + "/calib/vfa/VFA.stl";
     read_model_from_file(input_file, model);
 
@@ -872,8 +857,7 @@ void CalibUtils::calib_VFA(const CalibInfo &calib_info, wxString &error_message)
     auto height = 5 * ((params.end - params.start) / params.step + 1);
     if (height < obj_bb.size().z()) {
         cut_model(model, height, ModelObjectCutAttribute::KeepLower);
-    }
-    else {
+    } else {
         error_message = _L("The start, end or step is not valid value.");
         return;
     }
@@ -891,13 +875,13 @@ void CalibUtils::calib_VFA(const CalibInfo &calib_info, wxString &error_message)
     send_to_print(calib_info, error_message);
 }
 
-void CalibUtils::calib_retraction(const CalibInfo &calib_info, wxString &error_message)
+void CalibUtils::calib_retraction(const CalibInfo& calib_info, wxString& error_message)
 {
-    const Calib_Params &params = calib_info.params;
+    const Calib_Params& params = calib_info.params;
     if (params.mode != CalibMode::Calib_Retraction_tower)
         return;
 
-    Model model;
+    Model       model;
     std::string input_file = Slic3r::resources_dir() + "/calib/retraction/retraction_tower.stl";
     read_model_from_file(input_file, model);
 
@@ -910,7 +894,8 @@ void CalibUtils::calib_retraction(const CalibInfo &calib_info, wxString &error_m
     double layer_height = 0.2;
 
     auto max_lh = printer_config.option<ConfigOptionFloats>("max_layer_height");
-    if (max_lh->values[0] < layer_height) max_lh->values[0] = {layer_height};
+    if (max_lh->values[0] < layer_height)
+        max_lh->values[0] = {layer_height};
 
     filament_config.set_key_value("curr_bed_type", new ConfigOptionEnum<BedType>(calib_info.bed_type));
 
@@ -942,15 +927,17 @@ void CalibUtils::calib_retraction(const CalibInfo &calib_info, wxString &error_m
     send_to_print(calib_info, error_message);
 }
 
-int CalibUtils::get_selected_calib_idx(const std::vector<PACalibResult> &pa_calib_values, int cali_idx) {
+int CalibUtils::get_selected_calib_idx(const std::vector<PACalibResult>& pa_calib_values, int cali_idx)
+{
     for (int i = 0; i < pa_calib_values.size(); ++i) {
-        if(pa_calib_values[i].cali_idx == cali_idx)
+        if (pa_calib_values[i].cali_idx == cali_idx)
             return i;
     }
     return -1;
 }
 
-bool CalibUtils::get_pa_k_n_value_by_cali_idx(const MachineObject *obj, int cali_idx, float &out_k, float &out_n) {
+bool CalibUtils::get_pa_k_n_value_by_cali_idx(const MachineObject* obj, int cali_idx, float& out_k, float& out_n)
+{
     if (!obj)
         return false;
 
@@ -964,13 +951,16 @@ bool CalibUtils::get_pa_k_n_value_by_cali_idx(const MachineObject *obj, int cali
     return false;
 }
 
-bool CalibUtils::process_and_store_3mf(Model *model, const DynamicPrintConfig &full_config, const Calib_Params &params, wxString &error_message)
+bool CalibUtils::process_and_store_3mf(Model*                    model,
+                                       const DynamicPrintConfig& full_config,
+                                       const Calib_Params&       params,
+                                       wxString&                 error_message)
 {
     Pointfs bedfs         = make_counter_clockwise(full_config.opt<ConfigOptionPoints>("printable_area")->values);
     double  print_height  = full_config.opt_float("printable_height");
     double  current_width = bedfs[2].x() - bedfs[0].x();
     double  current_depth = bedfs[2].y() - bedfs[0].y();
-    Vec3i32   plate_size;
+    Vec3i32 plate_size;
     plate_size[0] = bedfs[2].x() - bedfs[0].x();
     plate_size[1] = bedfs[2].y() - bedfs[0].y();
     plate_size[2] = print_height;
@@ -986,34 +976,35 @@ bool CalibUtils::process_and_store_3mf(Model *model, const DynamicPrintConfig &f
     }
 
     if (params.mode == CalibMode::Calib_PA_Pattern) {
-        ModelInstance *instance = model->objects[0]->instances[0];
-        Vec3d offset = model->calib_pa_pattern->get_start_offset() +
-                       Vec3d(model->calib_pa_pattern->handle_xy_size() / 2, -model->calib_pa_pattern->handle_xy_size() / 2 - model->calib_pa_pattern->handle_spacing(), 0);
+        ModelInstance* instance = model->objects[0]->instances[0];
+        Vec3d          offset   = model->calib_pa_pattern->get_start_offset() +
+                       Vec3d(model->calib_pa_pattern->handle_xy_size() / 2,
+                             -model->calib_pa_pattern->handle_xy_size() / 2 - model->calib_pa_pattern->handle_spacing(), 0);
         instance->set_offset(offset);
-    }
-    else if (model->objects.size() == 1) {
-        ModelInstance *instance = model->objects[0]->instances[0];
+    } else if (model->objects.size() == 1) {
+        ModelInstance* instance = model->objects[0]->instances[0];
         instance->set_offset(instance->get_offset() + Vec3d(current_width / 2, current_depth / 2, 0));
     } else {
-        BoundingBoxf3 bbox = model->bounding_box_exact();
-        Vec3d bbox_center = bbox.center();
+        BoundingBoxf3 bbox        = model->bounding_box_exact();
+        Vec3d         bbox_center = bbox.center();
         for (auto object : model->objects) {
-            ModelInstance *instance = object->instances[0];
-            instance->set_offset(instance->get_offset() + Vec3d(current_width / 2 - bbox_center.x(), current_depth / 2 - bbox_center.y(), 0));
+            ModelInstance* instance = object->instances[0];
+            instance->set_offset(instance->get_offset() +
+                                 Vec3d(current_width / 2 - bbox_center.x(), current_depth / 2 - bbox_center.y(), 0));
         }
     }
 
     Slic3r::GUI::PartPlateList partplate_list(nullptr, model, PrinterTechnology::ptFFF);
     partplate_list.reset_size(plate_size.x(), plate_size.y(), plate_size.z(), false);
 
-    Slic3r::GUI::PartPlate *part_plate = partplate_list.get_plate(0);
+    Slic3r::GUI::PartPlate* part_plate = partplate_list.get_plate(0);
 
-    PrintBase *               print        = NULL;
-    Slic3r::GUI::GCodeResult *gcode_result = NULL;
+    PrintBase*                print        = NULL;
+    Slic3r::GUI::GCodeResult* gcode_result = NULL;
     int                       print_index;
     part_plate->get_print(&print, &gcode_result, &print_index);
 
-    BuildVolume build_volume(bedfs, print_height);
+    BuildVolume  build_volume(bedfs, print_height);
     unsigned int count = model->update_print_volume_state(build_volume);
     if (count == 0) {
         error_message = _L("Unable to calibrate: maybe because the set calibration value range is too large, or the step is too small");
@@ -1024,15 +1015,15 @@ bool CalibUtils::process_and_store_3mf(Model *model, const DynamicPrintConfig &f
     DynamicPrintConfig new_print_config = full_config;
     print->apply(*model, new_print_config);
 
-    Print *fff_print = dynamic_cast<Print *>(print);
+    Print* fff_print = dynamic_cast<Print*>(print);
     fff_print->set_calib_params(params);
 
-    //StringObjectException warning;
-    //auto err = print->validate(&warning);
-    //if (!err.string.empty()) {
-    //    error_message = "slice validate: " + err.string;
-    //    return;
-    //}
+    // StringObjectException warning;
+    // auto err = print->validate(&warning);
+    // if (!err.string.empty()) {
+    //     error_message = "slice validate: " + err.string;
+    //     return;
+    // }
 
     if (!check_nozzle_diameter_and_type(full_config, error_message))
         return false;
@@ -1044,7 +1035,7 @@ bool CalibUtils::process_and_store_3mf(Model *model, const DynamicPrintConfig &f
     fff_print->export_gcode(temp_gcode_path, gcode_result, nullptr);
 
     std::vector<ThumbnailData*> thumbnails;
-    PlateDataPtrs plate_data_list;
+    PlateDataPtrs               plate_data_list;
     partplate_list.store_to_3mf_structure(plate_data_list, true, 0);
 
     for (auto plate_data : plate_data_list) {
@@ -1054,55 +1045,50 @@ bool CalibUtils::process_and_store_3mf(Model *model, const DynamicPrintConfig &f
         filament_info.type          = full_config.opt_string("filament_type", 0);
     }
 
-    //draw thumbnails
+    // draw thumbnails
     {
-        GLVolumeCollection glvolume_collection;
+        GLVolumeCollection     glvolume_collection;
         std::vector<ColorRGBA> colors_out(1);
-        unsigned char  rgb_color[4] = {255, 255, 255, 255};
-        ColorRGBA new_color {1.0f, 1.0f, 1.0f, 1.0f};
+        unsigned char          rgb_color[4] = {255, 255, 255, 255};
+        ColorRGBA              new_color{1.0f, 1.0f, 1.0f, 1.0f};
         colors_out.push_back(new_color);
 
-        ThumbnailData* thumbnail_data = &plate_data_list[0]->plate_thumbnail;
-        unsigned int thumbnail_width = 512, thumbnail_height = 512;
+        ThumbnailData*         thumbnail_data  = &plate_data_list[0]->plate_thumbnail;
+        unsigned int           thumbnail_width = 512, thumbnail_height = 512;
         const ThumbnailsParams thumbnail_params = {{}, false, true, true, true, 0};
-        GLShaderProgram* shader = wxGetApp().get_shader("thumbnail");
+        GLShaderProgram*       shader           = wxGetApp().get_shader("thumbnail");
 
-        for (unsigned int obj_idx = 0; obj_idx < (unsigned int)model->objects.size(); ++ obj_idx) {
-            const ModelObject &model_object = *model->objects[obj_idx];
+        for (unsigned int obj_idx = 0; obj_idx < (unsigned int) model->objects.size(); ++obj_idx) {
+            const ModelObject& model_object = *model->objects[obj_idx];
 
-            for (int volume_idx = 0; volume_idx < (int)model_object.volumes.size(); ++ volume_idx) {
-                const ModelVolume &model_volume = *model_object.volumes[volume_idx];
-                for (int instance_idx = 0; instance_idx < (int)model_object.instances.size(); ++ instance_idx) {
-                    const ModelInstance &model_instance = *model_object.instances[instance_idx];
+            for (int volume_idx = 0; volume_idx < (int) model_object.volumes.size(); ++volume_idx) {
+                const ModelVolume& model_volume = *model_object.volumes[volume_idx];
+                for (int instance_idx = 0; instance_idx < (int) model_object.instances.size(); ++instance_idx) {
+                    const ModelInstance& model_instance = *model_object.instances[instance_idx];
                     glvolume_collection.load_object_volume(&model_object, obj_idx, volume_idx, instance_idx, "volume", true, false, true);
                     glvolume_collection.volumes.back()->set_render_color(new_color);
                     glvolume_collection.volumes.back()->set_color(new_color);
-                    //glvolume_collection.volumes.back()->printable = model_instance.printable;
+                    // glvolume_collection.volumes.back()->printable = model_instance.printable;
                 }
             }
         }
 
-        switch (Slic3r::GUI::OpenGLManager::get_framebuffers_type())
-        {
-            case Slic3r::GUI::OpenGLManager::EFramebufferType::Arb:
-            {
-                BOOST_LOG_TRIVIAL(info) << __FUNCTION__<< boost::format(": framebuffer_type: ARB");
-                Slic3r::GUI::GLCanvas3D::render_thumbnail_framebuffer(*thumbnail_data,
-                   thumbnail_width, thumbnail_height, thumbnail_params,
-                   partplate_list, model->objects, glvolume_collection, colors_out, shader, Slic3r::GUI::Camera::EType::Ortho);
-                break;
-            }
-            case Slic3r::GUI::OpenGLManager::EFramebufferType::Ext:
-            {
-                BOOST_LOG_TRIVIAL(info) << __FUNCTION__<< boost::format(": framebuffer_type: EXT");
-                Slic3r::GUI::GLCanvas3D::render_thumbnail_framebuffer_ext(*thumbnail_data,
-                   thumbnail_width, thumbnail_height, thumbnail_params,
-                   partplate_list, model->objects, glvolume_collection, colors_out, shader, Slic3r::GUI::Camera::EType::Ortho);
-                break;
-            }
-            default:
-                BOOST_LOG_TRIVIAL(info) << boost::format("framebuffer_type: unknown");
-                break;
+        switch (Slic3r::GUI::OpenGLManager::get_framebuffers_type()) {
+        case Slic3r::GUI::OpenGLManager::EFramebufferType::Arb: {
+            BOOST_LOG_TRIVIAL(info) << __FUNCTION__ << boost::format(": framebuffer_type: ARB");
+            Slic3r::GUI::GLCanvas3D::render_thumbnail_framebuffer(*thumbnail_data, thumbnail_width, thumbnail_height, thumbnail_params,
+                                                                  partplate_list, model->objects, glvolume_collection, colors_out, shader,
+                                                                  Slic3r::GUI::Camera::EType::Ortho);
+            break;
+        }
+        case Slic3r::GUI::OpenGLManager::EFramebufferType::Ext: {
+            BOOST_LOG_TRIVIAL(info) << __FUNCTION__ << boost::format(": framebuffer_type: EXT");
+            Slic3r::GUI::GLCanvas3D::render_thumbnail_framebuffer_ext(*thumbnail_data, thumbnail_width, thumbnail_height, thumbnail_params,
+                                                                      partplate_list, model->objects, glvolume_collection, colors_out,
+                                                                      shader, Slic3r::GUI::Camera::EType::Ortho);
+            break;
+        }
+        default: BOOST_LOG_TRIVIAL(info) << boost::format("framebuffer_type: unknown"); break;
         }
         thumbnails.push_back(thumbnail_data);
     }
@@ -1111,27 +1097,26 @@ bool CalibUtils::process_and_store_3mf(Model *model, const DynamicPrintConfig &f
     store_params.path            = path.c_str();
     store_params.model           = model;
     store_params.plate_data_list = plate_data_list;
-    store_params.config = &new_print_config;
+    store_params.config          = &new_print_config;
 
     store_params.export_plate_idx = 0;
-    store_params.thumbnail_data = thumbnails;
-
+    store_params.thumbnail_data   = thumbnails;
 
     store_params.strategy = SaveStrategy::Silence | SaveStrategy::WithGcode | SaveStrategy::SplitModel | SaveStrategy::SkipModel;
 
     bool success = Slic3r::store_bbs_3mf(store_params);
 
     store_params.strategy = SaveStrategy::Silence | SaveStrategy::SplitModel | SaveStrategy::WithSliceInfo | SaveStrategy::SkipAuxiliary;
-    store_params.path = config_3mf_path.c_str();
-    success           = Slic3r::store_bbs_3mf(store_params);
+    store_params.path     = config_3mf_path.c_str();
+    success               = Slic3r::store_bbs_3mf(store_params);
 
     release_PlateData_list(plate_data_list);
     return true;
 }
 
-void CalibUtils::send_to_print(const CalibInfo &calib_info, wxString &error_message, int flow_ratio_mode)
+void CalibUtils::send_to_print(const CalibInfo& calib_info, wxString& error_message, int flow_ratio_mode)
 {
-    {  // before send
+    { // before send
         json j;
         j["print"]["cali_mode"]       = calib_info.params.mode;
         j["print"]["start"]           = calib_info.params.start;
@@ -1148,10 +1133,10 @@ void CalibUtils::send_to_print(const CalibInfo &calib_info, wxString &error_mess
         BOOST_LOG_TRIVIAL(info) << "send_cali_job - before send: " << j.dump();
     }
 
-    std::string dev_id = calib_info.dev_id;
-    std::string select_ams = calib_info.select_ams;
+    std::string                        dev_id      = calib_info.dev_id;
+    std::string                        select_ams  = calib_info.select_ams;
     std::shared_ptr<ProgressIndicator> process_bar = calib_info.process_bar;
-    BedType bed_type = calib_info.bed_type;
+    BedType                            bed_type    = calib_info.bed_type;
 
     DeviceManager* dev = Slic3r::GUI::wxGetApp().getDeviceManager();
     if (!dev) {
@@ -1168,12 +1153,10 @@ void CalibUtils::send_to_print(const CalibInfo &calib_info, wxString &error_mess
     if (obj_->is_in_upgrading()) {
         error_message = _L("Cannot send the print job when the printer is updating firmware");
         return;
-    }
-    else if (obj_->is_system_printing()) {
+    } else if (obj_->is_system_printing()) {
         error_message = _L("The printer is executing instructions. Please restart printing after it ends");
         return;
-    }
-    else if (obj_->is_in_printing()) {
+    } else if (obj_->is_in_printing()) {
         error_message = _L("The printer is busy on other print job");
         return;
     }
@@ -1191,17 +1174,16 @@ void CalibUtils::send_to_print(const CalibInfo &calib_info, wxString &error_mess
 
     print_worker = std::make_unique<PlaterWorker<BoostThreadWorker>>(wxGetApp().plater(), std::move(process_bar), "calib_worker");
 
-    auto print_job              = std::make_unique<PrintJob>(dev_id);
-    print_job->m_dev_ip         = obj_->dev_ip;
-    print_job->m_ftp_folder     = obj_->get_ftp_folder();
-    print_job->m_access_code    = obj_->get_access_code();
-
+    auto print_job           = std::make_unique<PrintJob>(dev_id);
+    print_job->m_dev_ip      = obj_->dev_ip;
+    print_job->m_ftp_folder  = obj_->get_ftp_folder();
+    print_job->m_access_code = obj_->get_access_code();
 
 #if !BBL_RELEASE_TO_PUBLIC
-    print_job->m_local_use_ssl_for_ftp = wxGetApp().app_config->get("enable_ssl_for_ftp") == "true" ? true : false;
+    print_job->m_local_use_ssl_for_ftp  = wxGetApp().app_config->get("enable_ssl_for_ftp") == "true" ? true : false;
     print_job->m_local_use_ssl_for_mqtt = wxGetApp().app_config->get("enable_ssl_for_mqtt") == "true" ? true : false;
 #else
-    print_job->m_local_use_ssl_for_ftp = obj_->local_use_ssl_for_ftp;
+    print_job->m_local_use_ssl_for_ftp  = obj_->local_use_ssl_for_ftp;
     print_job->m_local_use_ssl_for_mqtt = obj_->local_use_ssl_for_mqtt;
 #endif
 
@@ -1209,25 +1191,25 @@ void CalibUtils::send_to_print(const CalibInfo &calib_info, wxString &error_mess
     print_job->cloud_print_only = obj_->is_support_cloud_print_only;
 
     PrintPrepareData job_data;
-    job_data.is_from_plater = false;
-    job_data.plate_idx = 0;
+    job_data.is_from_plater   = false;
+    job_data.plate_idx        = 0;
     job_data._3mf_config_path = config_3mf_path;
-    job_data._3mf_path = path;
-    job_data._temp_path = temp_dir;
+    job_data._3mf_path        = path;
+    job_data._temp_path       = temp_dir;
 
     PlateListData plate_data;
-    plate_data.is_valid = true;
-    plate_data.plate_count = 1;
+    plate_data.is_valid        = true;
+    plate_data.plate_count     = 1;
     plate_data.cur_plate_index = 0;
-    plate_data.bed_type = bed_type;
+    plate_data.bed_type        = bed_type;
 
-    print_job->job_data = job_data;
-    print_job->plate_data = plate_data;
+    print_job->job_data     = job_data;
+    print_job->plate_data   = plate_data;
     print_job->m_print_type = "from_normal";
 
-    print_job->task_ams_mapping = select_ams;
+    print_job->task_ams_mapping      = select_ams;
     print_job->task_ams_mapping_info = "";
-    print_job->task_use_ams = select_ams == "[254]" ? false : true;
+    print_job->task_use_ams          = select_ams == "[254]" ? false : true;
 
     CalibMode cali_mode       = calib_info.params.mode;
     print_job->m_project_name = get_calib_mode_name(cali_mode, flow_ratio_mode);
@@ -1237,16 +1219,14 @@ void CalibUtils::send_to_print(const CalibInfo &calib_info, wxString &error_mess
     print_job->set_print_config(MachineBedTypeString[bed_type], true, false, false, false, true, 0, 0, 0);
     print_job->set_print_job_finished_event(wxGetApp().plater()->get_send_calibration_finished_event(), print_job->m_project_name);
 
-    {  // after send: record the print job
+    { // after send: record the print job
         json j;
-        j["print"]["project_name"]    = print_job->m_project_name;
-        j["print"]["is_cali_task"]    = print_job->m_is_calibration_task;
+        j["print"]["project_name"] = print_job->m_project_name;
+        j["print"]["is_cali_task"] = print_job->m_is_calibration_task;
         BOOST_LOG_TRIVIAL(info) << "send_cali_job - after send: " << j.dump();
     }
 
     replace_job(*print_worker, std::move(print_job));
 }
 
-}
-}
-
+}} // namespace Slic3r::GUI

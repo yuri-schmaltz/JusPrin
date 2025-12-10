@@ -559,10 +559,14 @@ void Field::get_value_by_opt_type(wxString& str, const bool check_value /* = tru
                 double            x, y;
                 wxStringTokenizer _point(token, "x");
                 if (_point.HasMoreTokens()) {
-                    wxString x_str = _point.GetNextToken();
-                    if (x_str.ToDouble(&x) && _point.HasMoreTokens()) {
-                        wxString y_str = _point.GetNextToken();
-                        if (y_str.ToDouble(&y) && !_point.HasMoreTokens()) {
+                    wxString x_str    = _point.GetNextToken();
+                    auto     x_result = Slic3r::Utils::parse_double_safe(x_str);
+                    if (x_result.success && _point.HasMoreTokens()) {
+                        x                 = x_result.value;
+                        wxString y_str    = _point.GetNextToken();
+                        auto     y_result = Slic3r::Utils::parse_double_safe(y_str);
+                        if (y_result.success && !_point.HasMoreTokens()) {
+                            y = y_result.value;
                             if (m_opt_id == "bed_exclude_area") {
                                 if (0 <= x && 0 <= y) {
                                     out_values.push_back(Vec2d(x, y));
