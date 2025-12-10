@@ -2,8 +2,8 @@
   "name": "jusprin",
   "version": "0.1.0",
   "scripts": {
-    "build": "tailwindcss build styles.css -o css/jusprin.css",
-    "dev": "tailwindcss build styles.css -o css/jusprin.css --watch"
+    "build": "tailwindcss -i styles.css -o css/jusprin.css --minify",
+    "dev": "tailwindcss -i styles.css -o css/jusprin.css --watch"
   },
   "devDependencies": {
     "tailwindcss": "^3.4.14"
