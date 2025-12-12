@@ -1,7 +1,61 @@
-import os
-import json
+#!/usr/bin/env python3
+"""
+Orca Filament Library - Configuration utilities for filament profiles.
+
+This module provides utilities for parsing, validating, and manipulating
+filament configuration files used by JusPrin/OrcaSlicer.
+
+Author: JusPrin Development Team
+Date: 2024
+"""
+
 import argparse
+import json
+import os
+import sys
 from collections import defaultdict
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
+
+
+def parse_filament_config(path: Union[str, Path]) -> Optional[Dict[str, Any]]:
+    """
+    Parse a filament configuration file.
+
+    Args:
+        path: Path to the filament config JSON file (str or Path object)
+
+    Returns:
+        Parsed configuration dict, or None if invalid/not found
+
+    Raises:
+        ValueError: If file format is invalid
+        FileNotFoundError: If file does not exist
+
+    Example:
+        >>> config = parse_filament_config("profiles/PLA.json")
+        >>> if config:
+        ...     print(config['filament_type'])
+    """
+    filepath = Path(path) if isinstance(path, str) else path
+
+    if not filepath.exists():
+        raise FileNotFoundError(f"Filament config not found: {filepath}")
+
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+
+        # Validate required fields
+        if not isinstance(config, dict):
+            raise ValueError("Config must be a JSON object (dict)")
+
+        return config
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON in {filepath}: {e}")
+    except Exception as e:
+        print(f"Error parsing {filepath}: {e}", file=sys.stderr)
+        return None
 
 def create_ordered_profile(profile_dict, priority_fields=['name', 'type']):
     """Create a new dictionary with priority fields first"""

@@ -67,6 +67,9 @@ if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type (default Release)" FORCE)
 endif()
 
+# P2.1: Link Time Optimization for better performance
+option(SLIC3R_ENABLE_LTO "Enable Link Time Optimization (Release builds)" OFF)
+
 find_package(Git)
 if(GIT_FOUND AND EXISTS "${CMAKE_SOURCE_DIR}/.git")
     # Check current Git commit hash
@@ -96,7 +99,8 @@ option(SLIC3R_WX_STABLE         "Build against wxWidgets stable (3.0) as oppsed 
 option(SLIC3R_PROFILE 			"Compile OrcaSlicer with an invasive Shiny profiler" 0)
 option(SLIC3R_PCH               "Use precompiled headers" 1)
 option(SLIC3R_MSVC_COMPILE_PARALLEL "Compile on Visual Studio in parallel" 1)
-option(SLIC3R_MSVC_PDB          "Generate PDB files on MSVC in Release mode" 1)
+# P2.1: PDB generation OFF by default in Release for smaller binaries
+option(SLIC3R_MSVC_PDB          "Generate PDB files on MSVC in Release mode" 0)
 option(SLIC3R_PERL_XS           "Compile XS Perl module and enable Perl unit and integration tests" 0)
 option(SLIC3R_ASAN              "Enable ASan on Clang and GCC" 0)
 # If SLIC3R_FHS is 1 -> SLIC3R_DESKTOP_INTEGRATION is always 0, othrewise variable.
