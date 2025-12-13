@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # Development Service
+  # Usage: docker-compose up -d dev
+  # Attach: docker-compose exec dev bash
+  dev:
+    build:
+      context: .
+      dockerfile: docker/dev.Dockerfile
+      args:
+        BASE_IMAGE: mcr.microsoft.com/devcontainers/cpp:ubuntu-22.04
+    container_name: jusprin-dev
+    volumes:
+      # Mount source code
+      - .:/workspace:cached
+      # Persist ccache for faster rebuilds
+      - ccache-data:/home/vscode/.ccache
+      # Persist build directory to avoid rebuilding from scratch
+      - build-data:/workspace/build
+    # Enable GUI forwarding (Linux host)
+    environment:
+      - DISPLAY=${DISPLAY}
+    # Share IPC for GUI performance (optional)
+    ipc: host
+    # Network for connection to other services if needed
+    networks:
+      - jusprin-net
+    # Keep running
+    command: sleep infinity
+
+  # Documentation/Web Service (Mockup for future use)
+  # web:
+  #   image: nginx:alpine
+  #   ports:
+  #     - "8080:80"
+  #   volumes:
+  #     - ./resources/web:/usr/share/nginx/html
+
+volumes:
+  ccache-data:
+  build-data:
+
+networks:
+  jusprin-net:
+    driver: bridge

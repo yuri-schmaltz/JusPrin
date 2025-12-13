@@ -1,0 +1,12 @@
+{
+    "recommendations": [
+        "ms-vscode.cpptools",
+        "ms-vscode.cmake-tools",
+        "twxs.cmake",
+        "ms-vscode.cpptools-extension-pack",
+        "vadimcn.vscode-lldb",
+        "eamodio.gitlens",
+        "ms-azuretools.vscode-docker",
+        "yzhang.markdown-all-in-one"
+    ]
+}

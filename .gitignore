@@ -18,8 +18,7 @@ xs/assertlib*
 .vs/*
 local-lib
 /src/TAGS
-/.vscode/
-/.vscode
+
 build-linux/*
 deps/build*/*
 **/.DS_Store
@@ -27,7 +26,7 @@ install_*
 build_*/
 SVG
 src/OrcaSlicer-doc/
-.idea/
+
 /.cache/
 *.mo
 **/process_full/
